@@ -1,0 +1,9 @@
+{
+  "name": "basic",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "amplify:todosFunction": "pwd && cd amplify/backend/function/todosFunction/lib && pwd && npm install && cd .. && pwd && tsc -p ./tsconfig.json && cd .. && cd .. && cd .. && cd .."
+  }
+}
