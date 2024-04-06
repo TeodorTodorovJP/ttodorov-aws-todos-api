@@ -6,11 +6,11 @@
     "moduleResolution": "NodeNext",
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "outDir": "./src",
+    "outDir": "../src",
     "baseUrl": "./",
-    "rootDir": "./lib",
+    "rootDir": "./",
     "paths": {
-      "src": ["./lib"]
+      "src": ["./"]
     },
 
 

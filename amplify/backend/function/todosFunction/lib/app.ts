@@ -1,8 +1,16 @@
-import express, { type Request, type Response, type NextFunction } from "express"
-import bodyParser from "body-parser"
-import awsServerlessExpressMiddleware from "aws-serverless-express/middleware.js"
-import { DynamoDBClient, type ScanCommandInput, type Condition } from "@aws-sdk/client-dynamodb"
-import { type NativeAttributeValue } from "@aws-sdk/util-dynamodb"
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
+import bodyParser from "body-parser";
+import awsServerlessExpressMiddleware from "aws-serverless-express/middleware.js";
+import {
+  DynamoDBClient,
+  type ScanCommandInput,
+  type Condition,
+} from "@aws-sdk/client-dynamodb";
+import { type NativeAttributeValue } from "@aws-sdk/util-dynamodb";
 import {
   DeleteCommand,
   DynamoDBDocumentClient,
@@ -11,48 +19,48 @@ import {
   QueryCommand,
   ScanCommand,
   type QueryCommandInput,
-} from "@aws-sdk/lib-dynamodb"
+} from "@aws-sdk/lib-dynamodb";
 
-const ddbClient = new DynamoDBClient({ region: process.env.TABLE_REGION })
-const ddbDocClient = DynamoDBDocumentClient.from(ddbClient)
+const ddbClient = new DynamoDBClient({ region: process.env.TABLE_REGION });
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
-let tableName = "todosTable"
+let tableName = "todosTable";
 if (process.env.ENV && process.env.ENV !== "NONE") {
-  tableName = tableName + "-" + process.env.ENV
+  tableName = tableName + "-" + process.env.ENV;
 }
 
-const userIdPresent = false // TODO: update in case is required to use that definition
-const partitionKeyName = "id"
-const partitionKeyType = "S"
-const sortKeyName = "status"
-const sortKeyType = "S"
-const hasSortKey = true
-const path = "/todos"
-const UNAUTH = "UNAUTH"
-const hashKeyPath = "/:" + partitionKeyName
-const sortKeyPath = hasSortKey ? "/:" + sortKeyName : ""
+const userIdPresent = false; // TODO: update in case is required to use that definition
+const partitionKeyName = "id";
+const partitionKeyType = "S";
+const sortKeyName = "status";
+const sortKeyType = "S";
+const hasSortKey = true;
+const path = "/todos";
+const UNAUTH = "UNAUTH";
+const hashKeyPath = "/:" + partitionKeyName;
+const sortKeyPath = hasSortKey ? "/:" + sortKeyName : "";
 
 // declare a new express app
-const app = express()
-app.use(bodyParser.json())
-app.use(awsServerlessExpressMiddleware.eventContext())
+const app = express();
+app.use(bodyParser.json());
+app.use(awsServerlessExpressMiddleware.eventContext());
 
 // Enable CORS for all methods
 app.use(function (req: Request, res: Response, next: NextFunction) {
-  res.header("Access-Control-Allow-Origin", "*")
-  res.header("Access-Control-Allow-Headers", "*")
-  next()
-})
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "*");
+  next();
+});
 
 // convert url string param to expected Type
 const convertUrlType = (param: string, type: string) => {
   switch (type) {
     case "N":
-      return Number.parseInt(param)
+      return Number.parseInt(param);
     default:
-      return param
+      return param;
   }
-}
+};
 
 /************************************
  * HTTP Get method to list objects *
@@ -62,16 +70,17 @@ app.get(path, async function (req: Request, res: Response) {
   var params: ScanCommandInput = {
     TableName: tableName,
     Select: "ALL_ATTRIBUTES",
-  }
+  };
 
   try {
-    const data = await ddbDocClient.send(new ScanCommand(params))
-    res.json(data.Items)
+    const data = await ddbDocClient.send(new ScanCommand(params));
+    // data.Items
+    res.json({ todo1: "todo1", todo2: "todo2" });
   } catch (err: any) {
-    res.statusCode = 500
-    res.json({ error: "Could not load items: " + err.message })
+    res.statusCode = 500;
+    res.json({ error: "Could not load items: " + err.message });
   }
-})
+});
 
 /************************************
  * HTTP Get method to query objects *
@@ -80,41 +89,45 @@ app.get(path, async function (req: Request, res: Response) {
 type KeyConditions = Record<
   string,
   Omit<Condition, "AttributeValueList"> & {
-    AttributeValueList?: NativeAttributeValue[]
+    AttributeValueList?: NativeAttributeValue[];
   }
->
+>;
 
 app.get(path + "/:id", async function (req: Request, res: Response) {
   const condition: KeyConditions = {
     id: {
       ComparisonOperator: "EQ",
     },
-  }
+  };
 
   if (userIdPresent && req.apiGateway) {
-    condition.id.AttributeValueList = [req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH]
+    condition.id.AttributeValueList = [
+      req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH,
+    ];
   } else {
     try {
-      condition.id.AttributeValueList = [convertUrlType(req.params.id, partitionKeyType)]
+      condition.id.AttributeValueList = [
+        convertUrlType(req.params.id, partitionKeyType),
+      ];
     } catch (err: any) {
-      res.statusCode = 500
-      res.json({ error: "Wrong column type " + err })
+      res.statusCode = 500;
+      res.json({ error: "Wrong column type " + err });
     }
   }
 
   const queryParams: QueryCommandInput = {
     TableName: tableName,
     KeyConditions: condition,
-  }
+  };
 
   try {
-    const data = await ddbDocClient.send(new QueryCommand(queryParams))
-    res.json(data.Items)
+    const data = await ddbDocClient.send(new QueryCommand(queryParams));
+    res.json(data.Items);
   } catch (err: any) {
-    res.statusCode = 500
-    res.json({ error: "Could not load items: " + err.message })
+    res.statusCode = 500;
+    res.json({ error: "Could not load items: " + err.message });
   }
-})
+});
 
 /*****************************************
  * HTTP Get method for get single object *
@@ -245,10 +258,10 @@ app.get(path + "/:id", async function (req: Request, res: Response) {
 // })
 
 app.listen(3000, function () {
-  console.log("App started")
-})
+  console.log("App started");
+});
 
 // Export the app object. When executing the application local this does nothing. However,
 // to port it to AWS Lambda we will create a wrapper around that will load the app from
 // this file
-export default app
+export default app;

@@ -15,7 +15,7 @@
       "function": {
         "todosFunction": {
           "deploymentBucketName": "amplify-todos-staging-4573c-deployment",
-          "s3Key": "amplify-builds/todosFunction-353651747461796b466d-build.zip"
+          "s3Key": "amplify-builds/todosFunction-77387734754435327647-build.zip"
         }
       },
       "storage": {
